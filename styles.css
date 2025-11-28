@@ -11,6 +11,15 @@
   --gap: 0.25rem; 
 }
 
+/* Скрываем скроллбар, но оставляем функционал */
+html {
+    scrollbar-width: none; /* Firefox */
+}
+
+body::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera */
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -20,22 +29,32 @@
 body {
   background-color: var(--bg-color);
   font-family: 'Gilroy-Regular', sans-serif;
-  overflow-x: hidden;
+  /* Для работы JS-скролла обязательно нужен нативный скролл */
+  overflow-y: scroll; 
+  /* Высота body будет задана скриптом */
 }
 
 /* Сетка галереи */
 .gallery {
-    padding: var(--gap);
-    padding-bottom: 50px; 
+   position: relative;
 }
 
 .gallery-track {
+  /* position: fixed обязателен для эффекта плавного скролла */
+  position: fixed;
+  top: 0;
+  left: 0;
+  
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: var(--gap);
   width: 100%;
   max-width: 1920px;
-  margin: 0 auto;
+  
+  padding: var(--gap);
+  padding-bottom: 50px;
+  
+  will-change: transform; 
 }
 
 .card {
@@ -48,23 +67,19 @@ body {
   justify-content: center;
   overflow: hidden;
   cursor: zoom-in;
-  /* В галерее углы острые */
   border-radius: 0;
 
-  /* --- АНИМАЦИЯ --- */
+  /* Анимация появления при скролле */
   opacity: 0; 
-  transform: translateY(30px); /* Чуть меньше сдвиг для плавности */
+  transform: translateY(30px);
   transition: opacity 0.5s ease-out, transform 0.5s ease-out;
-  will-change: opacity, transform;
 }
 
-/* Состояние видимости */
 .card.visible {
     opacity: 1;
     transform: translateY(0);
 }
 
-/* ЧБ эффект при наведении */
 .card:hover img {
     filter: grayscale(100%);
 }
@@ -77,14 +92,13 @@ body {
   transition: filter 0.3s ease;
 }
 
-/* --- ОБНОВЛЕННЫЙ Lightbox (Попап) --- */
+/* --- LIGHTBOX (ПОПАП) --- */
 .lightbox {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    /* ИЗМЕНЕНО: Фон светлее и меньше блюра */
     background-color: rgba(0, 0, 0, 0.8);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
@@ -92,9 +106,11 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
+    
+    /* Простое плавное появление */
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.4s ease;
+    transition: opacity 0.3s ease;
 }
 
 .lightbox.active {
@@ -105,11 +121,7 @@ body {
 .lightbox-content {
     max-width: 90vw;
     max-height: 90vh;
-    transform: scale(0.95);
-    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-.lightbox.active .lightbox-content {
+    /* Без лишних анимаций масштаба */
     transform: scale(1);
 }
 
@@ -117,7 +129,6 @@ body {
     max-width: 100%;
     max-height: 90vh;
     object-fit: contain;
-    /* ИЗМЕНЕНО: Закругленные углы только в попапе */
     border-radius: 12px; 
     box-shadow: 0 20px 60px rgba(0,0,0,0.3);
 }
@@ -140,7 +151,7 @@ body {
     color: white;
 }
 
-/* Адаптивность */
+/* --- АДАПТИВНОСТЬ --- */
 @media (max-width: 1024px) {
   .gallery-track {
 	grid-template-columns: repeat(3, 1fr);
@@ -150,6 +161,15 @@ body {
 @media (max-width: 768px) {
   .gallery-track {
 	grid-template-columns: repeat(2, 1fr);
+  }
+
+  /* Отключаем попап на мобильных */
+  .card {
+      cursor: default;
+  }
+  
+  .card img {
+      pointer-events: none; 
   }
 }
 
