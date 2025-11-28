@@ -1,281 +1,149 @@
-@font-face {
-    font-family: 'Gilroy-Medium';
-    src: local('Gilroy-Medium'), url('Gilroy-Medium.woff2') format('woff2');
-    font-weight: normal;
-    font-style: normal;
-    font-display: swap;
-}
-
-@font-face {
-    font-family: 'Gilroy-UltraLight';
-    src: local('Gilroy-UltraLight'), url('Gilroy-UltraLight.woff2') format('woff2');
-    font-weight: normal;
-    font-style: normal;
-    font-display: swap;
-}
-
+/* Файл: styles.css */
 @font-face {
     font-family: 'Gilroy-Regular';
     src: local('Gilroy-Regular'), url('Gilroy-Regular.woff2') format('woff2');
-    font-weight: normal;
-    font-style: normal;
     font-display: swap;
 }
 
-
-
-
 :root {
-  --dark-gray: rgb(56, 56, 56);
-  font-family: 'Gilroy-Regular', sans-serif;
+  --bg-color: rgb(250, 250, 250);
+  --text-color: rgb(190, 190, 190);
+  /* Возвращаем оригинальный отступ как в исходнике */
+  --gap: 0.25rem; 
 }
 
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  background-color: rgb(250, 250, 250);
+}
+
+body {
+  background-color: var(--bg-color);
+  font-family: 'Gilroy-Regular', sans-serif;
+  overflow-x: hidden;
+}
+
+/* Сетка галереи */
+.gallery {
+    /* Оригинальный padding вокруг сетки */
+    padding: var(--gap);
 }
 
 .gallery-track {
-  margin-top: 4vw;
-  position: fixed;
   display: grid;
-  grid-template-columns: repeat(3,1fr);
-  gap: 0.25rem;
-  padding: 0.25rem;
-  will-change: transform;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--gap);
+  width: 100%;
+  max-width: 1920px;
+  margin: 0 auto;
 }
 
 .card {
-  height: 400px;
+  aspect-ratio: 1 / 1;
+  width: 100%;
+  height: auto; 
+  background-color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   overflow: hidden;
-  cursor: pointer;
+  cursor: zoom-in;
+  /* УБРАНО: border-radius для острых углов */
+  border-radius: 0;
+  transition: none; /* Убираем анимацию самой карточки */
+}
 
-  .card-image-wrapper {
-	height: 115%;
-	will-change: transform;
-  }
+/* ЧБ эффект при наведении */
+.card:hover img {
+    filter: grayscale(100%);
+}
 
-  .card-image-wrapper img {
-	width: 100%;
-	height: 100%;
-	object-fit: cover;
-  }
-} 
+/* УБРАНО: Увеличение карточки (.card:hover transform) */
 
-.card-image-wrapper img {
+.card img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain; 
+  display: block;
+  transition: filter 0.3s ease;
+}
+
+/* Lightbox (Попап) */
+.lightbox {
+    position: fixed;
+    top: 0;
+    left: 0;
     width: 100%;
-    transition: transform 0.3s ease-in-out;
+    height: 100%;
+    background-color: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(10px);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
 }
 
-.card-image-wrapper img:active {
-    transform: scale(1.2);
+.lightbox.active {
+    opacity: 1;
+    pointer-events: all;
 }
 
-nav {
-	height: 4vw;
-	width: 100%;
-	background-color: rgb(250, 250, 250);
-	position: fixed;
-	z-index: 10;
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	user-select: none;
-	padding: 2.2vw;
+.lightbox-content {
+    max-width: 90vw;
+    max-height: 90vh;
+    transform: scale(0.9);
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-.zoomed {
-	position: fixed;
-	inset: 0;
-	margin: auto;
-	max-width: 80vw;
-	max-height: 80vh;
-	z-index: 1000;
-	transition: transform 0.5s cubic-bezier(0.3, 1.5, 0.3, 1), 
-				opacity 0.5s ease-in-out, 
-				clip-path 0.5s cubic-bezier(0.3, 1.5, 0.3, 1);
-	clip-path: circle(0% at center);
-	opacity: 0;
-	transform: scale(0);
-	object-fit: contain;
-  }
-  
-  .zoomed.active {
-	clip-path: circle(100% at center);
-	opacity: 1;
-	transform: scale(1);
-  }
-  
-  
-
-
-.logo img{
-	width: 10vw;
+.lightbox.active .lightbox-content {
+    transform: scale(1);
 }
 
-
-.links {
-	display: flex;
-	cursor: pointer;
+.lightbox-content img {
+    max-width: 100%;
+    max-height: 90vh;
+    object-fit: contain;
+    /* Углы изображения в попапе тоже делаем острыми для стиля */
+    border-radius: 0; 
+    box-shadow: 0 20px 40px rgba(0,0,0,0.1);
 }
 
-h1 {
-	font-size: 1.4vw;
-	font-family: 'Gilroy-Regular';
-	font-weight: 400;
-	color: rgb(190, 190, 190);
-	padding-bottom: 0.5vw;
-	padding-right: 6vw;
+.lightbox-close {
+    position: absolute;
+    top: 30px;
+    right: 40px;
+    font-size: 3rem;
+    color: rgb(56, 56, 56);
+    background: none;
+    border: none;
+    cursor: pointer;
+    line-height: 1;
+    transition: transform 0.2s ease;
 }
 
-.link {
-	position: relative;
-	overflow: hidden;
-	padding-bottom: 0.5vw;
-	font-size: 1.4vw;
-	color: rgb(190, 190, 190);
-	text-decoration: none; /* Убирает подчёркивание */
+.lightbox-close:hover {
+    transform: rotate(90deg);
 }
 
-
-
-
-.linkline {
-	position: absolute;
-	display: block;
-}
-
-.link:after {
-	content: "";
-	position: absolute;
-	bottom: 0.2vw;
-	right: 0;
-	width: 0%;
-	height: 0.11vw;
-	background-color: rgb(190, 190, 190);
-	transition: all 0.32s cubic-bezier(.47,.17,.3,1);
-}
-
-.link:hover:after {
-	left: 0;
-	width: 100%;
-}
-
-.linkWhite {
-	margin-left: 3vw;
-	position: relative;
-	overflow: hidden;
-	padding: 0.5vw 0;
-	cursor: pointer;
-}
-
-.linkWhite:after {
-	content: "";
-	position: absolute;
-	right: 0;
-	width: 0%;
-    height: 2px;
-    background: rgb(250, 250, 250);
-	transition: all 0.32s cubic-bezier(.47,.17,.3,1);
-}
-
-.linkWhite:hover:after {
-	left: 0;
-	width: 100%;
-}
-
-/*::::::::::::::::::::::::::::::::::::::::::::::::::*/
-/* Скроллбар                                        */
-/*::::::::::::::::::::::::::::::::::::::::::::::::::*/
-
-
-::-webkit-scrollbar {
-  width: 10px; /* Scrollbar width */
-  background-color: rgb(250, 250, 250); 
-  transition: all 0.3s ease;
-}
-
-::-webkit-scrollbar-thumb {
-  background-color: rgb(190, 190, 190);
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background-color: #888888; /* Цвет при наведении */
-}
-
-
-@media (max-width: 800px) {
+/* Адаптивность */
+@media (max-width: 1024px) {
   .gallery-track {
-	grid-template-columns: repeat(2,1fr);
+	grid-template-columns: repeat(3, 1fr);
   }
-  .card {
-	height: 250px;
-  } 
 }
 
-@media (max-width: 550px) {
-
-.gallery-track {
-  margin-top: 12vw;
-  position: fixed;
-  display: grid;
-  grid-template-columns: repeat(1,1fr);
-  gap: 0.25rem;
-  padding: 0.25rem;
-  will-change: transform;
-}
-
-.card {
-  height: 300px;
-  overflow: hidden;
-
-  .card-image-wrapper {
-	height: 115%;
-	will-change: transform;
+@media (max-width: 768px) {
+  .gallery-track {
+	grid-template-columns: repeat(2, 1fr);
   }
+}
 
-  .card-image-wrapper img {
-	width: 100%;
-	height: 100%;
-	object-fit: cover;
+@media (max-width: 480px) {
+  .gallery-track {
+	grid-template-columns: repeat(1, 1fr);
   }
-} 
-
-nav {
-	height: 16vw;
-	width: 100%;
-	background-color: rgb(250, 250, 250);
-	position: fixed;
-	z-index: 10;
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	user-select: none;
-	padding: 5vw;
-}
-
-h1 {
-	display: none;
-}
-
-.logo img{
-	width: 33vw;
-}
-
-.links {
-	display: flex;
-	cursor: pointer;
-}
-
-.link {
-	position: relative;
-	overflow: hidden;
-	padding-top: 0.6vw;
-	padding-bottom: 1.2vw;
-	font-size: 4.8vw;
-	color: rgb(190, 190, 190);
-}
-
 }
