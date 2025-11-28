@@ -8,7 +8,6 @@
 :root {
   --bg-color: rgb(250, 250, 250);
   --text-color: rgb(190, 190, 190);
-  /* Возвращаем оригинальный отступ как в исходнике */
   --gap: 0.25rem; 
 }
 
@@ -26,8 +25,8 @@ body {
 
 /* Сетка галереи */
 .gallery {
-    /* Оригинальный padding вокруг сетки */
     padding: var(--gap);
+    padding-bottom: 50px; 
 }
 
 .gallery-track {
@@ -49,17 +48,26 @@ body {
   justify-content: center;
   overflow: hidden;
   cursor: zoom-in;
-  /* УБРАНО: border-radius для острых углов */
+  /* В галерее углы острые */
   border-radius: 0;
-  transition: none; /* Убираем анимацию самой карточки */
+
+  /* --- АНИМАЦИЯ --- */
+  opacity: 0; 
+  transform: translateY(30px); /* Чуть меньше сдвиг для плавности */
+  transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+  will-change: opacity, transform;
+}
+
+/* Состояние видимости */
+.card.visible {
+    opacity: 1;
+    transform: translateY(0);
 }
 
 /* ЧБ эффект при наведении */
 .card:hover img {
     filter: grayscale(100%);
 }
-
-/* УБРАНО: Увеличение карточки (.card:hover transform) */
 
 .card img {
   width: 100%;
@@ -69,22 +77,24 @@ body {
   transition: filter 0.3s ease;
 }
 
-/* Lightbox (Попап) */
+/* --- ОБНОВЛЕННЫЙ Lightbox (Попап) --- */
 .lightbox {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(255, 255, 255, 0.9);
+    /* ИЗМЕНЕНО: Фон светлее и меньше блюра */
+    background-color: rgba(0, 0, 0, 0.8);
     backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     z-index: 1000;
     display: flex;
     align-items: center;
     justify-content: center;
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.3s ease;
+    transition: opacity 0.4s ease;
 }
 
 .lightbox.active {
@@ -95,8 +105,8 @@ body {
 .lightbox-content {
     max-width: 90vw;
     max-height: 90vh;
-    transform: scale(0.9);
-    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    transform: scale(0.95);
+    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .lightbox.active .lightbox-content {
@@ -107,9 +117,9 @@ body {
     max-width: 100%;
     max-height: 90vh;
     object-fit: contain;
-    /* Углы изображения в попапе тоже делаем острыми для стиля */
-    border-radius: 0; 
-    box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+    /* ИЗМЕНЕНО: Закругленные углы только в попапе */
+    border-radius: 12px; 
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
 }
 
 .lightbox-close {
@@ -117,16 +127,17 @@ body {
     top: 30px;
     right: 40px;
     font-size: 3rem;
-    color: rgb(56, 56, 56);
+    color: rgb(220, 220, 220);
     background: none;
     border: none;
     cursor: pointer;
     line-height: 1;
-    transition: transform 0.2s ease;
+    transition: transform 0.2s ease, color 0.2s ease;
 }
 
 .lightbox-close:hover {
     transform: rotate(90deg);
+    color: white;
 }
 
 /* Адаптивность */
