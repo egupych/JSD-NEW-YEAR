@@ -1,51 +1,70 @@
-/* Файл: app.js */
+/* Файл: app.js
+   Описание:
+   1. Реализует кастомный плавный скролл (Smooth Scroll) через смещение контейнера.
+   2. Рассчитывает высоту body, чтобы нативный скроллбар соответствовал длине контента.
+   3. Управляет появлением элементов (Intersection Observer).
+   4. Отвечает за открытие/закрытие модального окна (Lightbox).
+*/
 
 const track = document.querySelector('.gallery-track');
 
-// --- 1. ПЛАВНЫЙ СКРОЛЛ (Smooth Scroll) ---
+// --- 1. ПЛАВНЫЙ СКРОЛЛ (Custom Smooth Scroll) ---
 
-const easing = 0.08; // Плавность (меньше = плавнее)
-let startY = 0;
-let endY = 0;
-let raf = null;
+const easing = 0.08; // Коэффициент плавности (меньше = медленнее/плавнее)
+let currentY = 0;    // Текущая позиция сдвига
+let targetY = 0;     // Целевая позиция (скролл браузера)
+let rafId = null;    // ID анимации
 
+// Функция линейной интерполяции
 const lerp = (start, end, t) => start * (1 - t) + end * t;
 
-// Устанавливаем высоту страницы равной высоте контента, 
-// чтобы браузер показал скроллбар и позволил скроллить
+// Устанавливаем высоту body равной реальной высоте контента,
+// чтобы появился нативный скроллбар
 function setBodyHeight() {
-    document.body.style.height = `${track.scrollHeight}px`;
+    if (track) {
+        document.body.style.height = `${track.scrollHeight}px`;
+    }
 }
 
 function updateScroll() {
-  // Интерполяция значения скролла
-  startY = lerp(startY, endY, easing);
-  // Сдвигаем фиксированный контейнер
-  track.style.transform = `translateY(-${startY}px)`;
+    // Плавно приближаем текущее значение к целевому
+    currentY = lerp(currentY, targetY, easing);
+    
+    // Применяем сдвиг (translate3d включает GPU-ускорение)
+    if (track) {
+        track.style.transform = `translate3d(0, -${currentY}px, 0)`;
+    }
 
-  // Продолжаем анимацию пока есть разница
-  if (Math.abs(startY - window.scrollY) < 0.1) {
-    cancelAnimationFrame(raf);
-    raf = null;
-  } else {
-    raf = requestAnimationFrame(updateScroll);
-  }
+    // Если разница очень мала, останавливаем анимацию для экономии ресурсов
+    // Иначе продолжаем цикл
+    if (Math.abs(targetY - currentY) < 0.1) {
+        currentY = targetY;
+        track.style.transform = `translate3d(0, -${targetY}px, 0)`;
+        rafId = null;
+    } else {
+        rafId = requestAnimationFrame(updateScroll);
+    }
 }
 
-function startScroll() {
-  endY = window.scrollY;
-  if (!raf) raf = requestAnimationFrame(updateScroll);
+function onScroll() {
+    targetY = window.scrollY; // Обновляем цель
+    if (!rafId) {
+        rafId = requestAnimationFrame(updateScroll);
+    }
 }
 
-// Запуск слушателей
-window.addEventListener('scroll', startScroll);
+// Слушатели событий скролла и изменения размеров
+window.addEventListener('scroll', onScroll);
+
 window.addEventListener('resize', () => {
     setBodyHeight();
-    startScroll();
+    onScroll(); // Пересчитываем позицию
 });
+
+// Ждем полной загрузки (включая картинки), чтобы верно посчитать высоту
 window.addEventListener('load', () => {
     setBodyHeight();
-    startScroll();
+    onScroll();
 });
 
 
@@ -62,9 +81,10 @@ const observerCallback = (entries, observer) => {
 
     entries.forEach((entry) => {
         if (entry.isIntersecting) {
+            // Небольшая задержка для эффекта "лесенки"
             setTimeout(() => {
                 entry.target.classList.add('visible');
-            }, delayCounter * 150); 
+            }, delayCounter * 100); 
 
             delayCounter++; 
             observer.unobserve(entry.target);
@@ -73,9 +93,9 @@ const observerCallback = (entries, observer) => {
 };
 
 const scrollObserver = new IntersectionObserver(observerCallback, observerOptions);
-const cardsContainer = document.querySelectorAll('.card');
+const cards = document.querySelectorAll('.card');
 
-cardsContainer.forEach((card) => {
+cards.forEach((card) => {
     scrollObserver.observe(card);
 });
 
@@ -94,6 +114,7 @@ cardImages.forEach(img => {
         const src = img.src;
         lightboxImg.src = src;
         lightbox.classList.add('active');
+        // Блокируем скролл, чтобы страница не ехала под попапом
         document.body.style.overflow = 'hidden'; 
     });
 });
@@ -101,8 +122,10 @@ cardImages.forEach(img => {
 // Закрытие
 const closeLightbox = () => {
     lightbox.classList.remove('active');
-    // Возвращаем overflow: scroll, чтобы JS-скролл продолжил работать
-    document.body.style.overflow = 'hidden auto'; 
+    
+    // ВАЖНО: Возвращаем сброс overflow в пустоту, чтобы подхватилось значение из CSS.
+    // В оригинале была ошибка 'hidden auto', которая могла ломать логику.
+    document.body.style.overflow = ''; 
     
     setTimeout(() => {
         lightboxImg.src = '';
